@@ -1,0 +1,17 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: ./scripts/build.sh
+        timeout-minutes: 2
+      - name: Test
+        run: ./scripts/test.sh
+        timeout-minutes: 2
