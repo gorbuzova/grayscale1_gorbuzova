@@ -1,30 +1,29 @@
-#include <opencv2/opencv.hpp>
 #include <iostream>
+#include <opencv2/opencv.hpp>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../src/stb_image.h"
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     if (argc != 2) {
         std::cout << "Usage: " << argv[0] << " <image_path>" << std::endl;
         return -1;
     }
 
-    int width, height, channels;
-    unsigned char* img_data = stbi_load(argv[1], &width, &height, &channels, 1);
-    if (!img_data) {
+    cv::Mat img_color = cv::imread(argv[1], cv::IMREAD_COLOR);
+    if (img_color.empty()) {
         std::cout << "Could not read image: " << argv[1] << std::endl;
         return -1;
     }
 
-    cv::Mat img(height, width, CV_8UC1);
-    memcpy(img.data, img_data, width * height);
-    stbi_image_free(img_data);
+    cv::Mat img_rgb;
+    cv::cvtColor(img_color, img_rgb, cv::COLOR_BGR2RGB);
+
+    cv::Mat img;
+    cv::cvtColor(img_rgb, img, cv::COLOR_RGB2GRAY);
 
     cv::Mat kernel_blur = cv::Mat::ones(3, 3, CV_32F) / 9.0f;
     cv::Mat kernel_identity = cv::Mat::zeros(3, 3, CV_32F);
     kernel_identity.at<float>(1, 1) = 1.0f;
-    cv::Mat kernel_sobel_x = (cv::Mat_<float>(3, 3) << -1,0,1, -2,0,2, -1,0,1);
+    cv::Mat kernel_sobel_x =
+        (cv::Mat_<float>(3, 3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
 
     cv::Mat blur_result, identity_result, sobel_result;
     cv::filter2D(img, blur_result, CV_32F, kernel_blur);
