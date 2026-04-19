@@ -1,32 +1,48 @@
 #!/bin/bash
 set -e
+shopt -s nullglob
 
-# Проверяем, передан ли путь к изображению
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 <image_path>"
+cmake -S . -B build
+cmake --build build
+
+if [ ! -d images ]; then
+    echo "images directory not found"
     exit 1
 fi
 
-IMAGE="$1"
+images=(images/*)
+if [ ${#images[@]} -eq 0 ]; then
+    echo "No images found in images/"
+    exit 1
+fi
 
-# Генерация эталонов OpenCV
-echo "- Generating OpenCV reference -"
-./tests/opencv_reference "$IMAGE"
+for IMAGE in "${images[@]}"; do
+    if [ ! -f "$IMAGE" ]; then
+        continue
+    fi
 
-# Свёртка для трёх ядер
-echo "- Running box blur -"
-./src/grayscale "$IMAGE" "box3_out.png" 3 box
+    BASENAME=$(basename "$IMAGE")
+    NAME="${BASENAME%.*}"
 
-echo "- Running identity -"
-./src/grayscale "$IMAGE" "identity_out.png" 3 identity
+    echo "Testing image: $IMAGE"
 
-echo "- Running sobelx -"
-./src/grayscale "$IMAGE" "sobelx_out.png" 3 sobelx
+    echo "- Generating OpenCV reference -"
+    ./build/opencv_reference "$IMAGE"
 
-# Сравнение
-echo "- Comparing results -"
-./tests/test_compare blur_result.png box3_out.png
-./tests/test_compare identity_result.png identity_out.png
-./tests/test_compare sobel_result.png sobelx_out.png
+    echo "- Running box blur -"
+    ./build/grayscale "$IMAGE" "box3_out_${NAME}.png" box
+
+    echo "- Running identity -"
+    ./build/grayscale "$IMAGE" "identity_out_${NAME}.png" identity
+
+    echo "- Running sobelx -"
+    ./build/grayscale "$IMAGE" "sobelx_out_${NAME}.png" sobelx
+
+    echo "- Comparing results -"
+    ./build/test_compare blur_result.png "box3_out_${NAME}.png"
+    ./build/test_compare identity_result.png "identity_out_${NAME}.png"
+    ./build/test_compare sobel_result.png "sobelx_out_${NAME}.png"
+done
 
 echo "All tests completed"
+
