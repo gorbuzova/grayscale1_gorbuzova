@@ -20,10 +20,10 @@ jobs:
         run: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: clang-format check
-        run: clang-format --dry-run --Werror $(find src tests -type f \( -name "*.c" -o -name "*.cpp" \)) || true
+        run: clang-format --dry-run --Werror $(find src tests -type f \( -name "*.c" -o -name "*.cpp" \) ! -name "stb_image.h" ! -name
 
       - name: clang-tidy check
-        run: clang-tidy src/grayscale.c tests/test.c -p build || true
+        run: run-clang-tidy -p=build src/grayscale.c tests/test.c
 
       - name: Build and Test
         run: bash run_all_tests.sh

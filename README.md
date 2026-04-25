@@ -9,9 +9,10 @@ mkdir build
 cd build
 cmake ..
 make
+cd ..
 ```
 
-## Запуск свёртки
+## Запуск свёртки (из корневой директории)
 
 ```bash
 ./build/grayscale <input_image> <output_image> [kernel_type]
