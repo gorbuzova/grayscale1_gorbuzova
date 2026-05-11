@@ -8,10 +8,17 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-/* Метод зеркального отражения относительно границы.
+typedef enum {
+    BORDER_REFLECT101,
+    BORDER_REFLECT,
+    BORDER_REPLICATE,
+    BORDER_CONSTANT
+} border_mode_t;
+/* Метод зеркального отражения относительно границы (без дублирования крайнего пикселя).
 Аналогичен BORDER_REFLECT_101 в OpenCV.
 Предпочтителен для градиентных фильтров, например Sobel. */
 static int reflect101(int position, int size) {
+
     if (size == 1) {
         return 0;
     }
@@ -26,16 +33,54 @@ static int reflect101(int position, int size) {
     return position;
 }
 
-static float get_pixel_reflect(const float *image_data, int x, int y, int c,
-                               int width, int height) {
-    x = reflect101(x, width);
-    y = reflect101(y, height);
+/* способ похож на reflect101, но здесь крайний пиксель повторяется */
+static int reflect(int position, int size) {
+    if (size == 1) {
+        return 0;
+    }
+    while (position < 0 || position >= size) {
+        if (position < 0) {
+            position = -position - 1;
+        } else {
+            position = 2 * size - position - 1;
+        }
+    }
+    return position;
+}
+
+static int clamp_int(int value, int min_value, int max_value) {
+    if (value < min_value) {
+        return min_value;
+    }
+    if (value > max_value) {
+        return max_value;
+    }
+    return value;
+}
+static float get_pixel_border(const float *image_data, int x, int y, int c,
+                              int width, int height, border_mode_t border_mode) {
+/* за границей подставляется одно и то же значение (0) */
+if (border_mode == BORDER_CONSTANT) {
+        if (x < 0 || x >= width || y < 0 || y >= height) {
+            return 0.0f;
+        }
+    /* повторяется ближайший пиксель */
+    } else if (border_mode == BORDER_REPLICATE) {
+        x = clamp_int(x, 0, width - 1);
+        y = clamp_int(y, 0, height - 1);
+    } else if (border_mode == BORDER_REFLECT) {
+        x = reflect(x, width);
+        y = reflect(y, height);
+    } else {
+        x = reflect101(x, width);
+        y = reflect101(y, height);
+    }
     return image_data[(y * width + x) * 3 + c];
 }
 
 void convolve_rgb(const float *input_image, int width, int height,
                   const float *kernel, int kernel_size,
-                  float *output_image) {
+                  float *output_image, border_mode_t border_mode) {
     int radius = kernel_size / 2;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -45,8 +90,8 @@ void convolve_rgb(const float *input_image, int width, int height,
                     for (int kx = 0; kx < kernel_size; ++kx) {
                         int img_x = x + (kx - radius);
                         int img_y = y + (ky - radius);
-                        float pixel = get_pixel_reflect(
-                            input_image, img_x, img_y, c, width, height);
+                        float pixel = get_pixel_border(input_image, img_x, img_y, c, width, height,
+                               border_mode);
                         int flipped_kx = kernel_size - 1 - kx;
                         int flipped_ky = kernel_size - 1 - ky;
                         sum += pixel *
@@ -75,11 +120,12 @@ int main(int argc, char **argv) {
     unsigned char *result_bytes = NULL;
     int status = 1;
 
-    if (argc < 3 || argc > 4) {
+    if (argc < 3 || argc > 5) {
         fprintf(stderr,
-                "Usage: %s <input_image> <output_image> [kernel_type]\n",
+                "Usage: %s <input_image> <output_image> [kernel_type] [border_mode]\n",
                 argv[0]);
         fprintf(stderr, "kernel_type: box (default), identity, sobelx\n");
+        fprintf(stderr, "border_mode: reflect101 (default), reflect, replicate, constant\n");
         return 1;
     }
 
@@ -88,10 +134,26 @@ int main(int argc, char **argv) {
     const int kernel_size = 3;
 
     const char *kernel_type = "box";
-    if (argc == 4) {
+    if (argc >= 4) {
         kernel_type = argv[3];
     }
-
+    const char *border_mode_name = "reflect101";
+    if (argc == 5) {
+        border_mode_name = argv[4];
+    }
+    border_mode_t border_mode;
+    if (strcmp(border_mode_name, "reflect101") == 0) {
+        border_mode = BORDER_REFLECT101;
+    } else if (strcmp(border_mode_name, "reflect") == 0) {
+        border_mode = BORDER_REFLECT;
+    } else if (strcmp(border_mode_name, "replicate") == 0) {
+        border_mode = BORDER_REPLICATE;
+    } else if (strcmp(border_mode_name, "constant") == 0) {
+        border_mode = BORDER_CONSTANT;
+    } else {
+        fprintf(stderr, "Unknown border mode: %s\n", border_mode_name);
+        goto cleanup;
+    }
     // Загрузка изображения как RGB
     int width, height, channels;
     img_data = stbi_load(input_file, &width, &height, &channels, 3);
@@ -137,7 +199,7 @@ int main(int argc, char **argv) {
 
     // Свёртка
     convolve_rgb(input_float, width, height, kernel, kernel_size,
-                       output_float);
+                       output_float, border_mode);
 
     // Конвертация обратно в 8 бит
     result_bytes = (unsigned char *)malloc(num_values);
