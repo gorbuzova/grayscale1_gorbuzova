@@ -26,33 +26,35 @@ static int reflect101(int position, int size) {
     return position;
 }
 
-static float get_pixel_reflect(const float *image_data, int x, int y, int width,
-                               int height) {
+static float get_pixel_reflect(const float *image_data, int x, int y, int c,
+                               int width, int height) {
     x = reflect101(x, width);
     y = reflect101(y, height);
-    return image_data[y * width + x];
+    return image_data[(y * width + x) * 3 + c];
 }
 
-void convolve_grayscale(const float *input_image, int width, int height,
-                        const float *kernel, int kernel_size,
-                        float *output_image) {
+void convolve_rgb(const float *input_image, int width, int height,
+                  const float *kernel, int kernel_size,
+                  float *output_image) {
     int radius = kernel_size / 2;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            float sum = 0.0f;
-            for (int ky = 0; ky < kernel_size; ++ky) {
-                for (int kx = 0; kx < kernel_size; ++kx) {
-                    int img_x = x + (kx - radius);
-                    int img_y = y + (ky - radius);
-                    float pixel = get_pixel_reflect(input_image, img_x, img_y,
-                                                    width, height);
-                    int flipped_kx = kernel_size - 1 - kx;
-                    int flipped_ky = kernel_size - 1 - ky;
-                    sum +=
-                        pixel * kernel[flipped_ky * kernel_size + flipped_kx];
+            for (int c = 0; c < 3; ++c) {
+                float sum = 0.0f;
+                for (int ky = 0; ky < kernel_size; ++ky) {
+                    for (int kx = 0; kx < kernel_size; ++kx) {
+                        int img_x = x + (kx - radius);
+                        int img_y = y + (ky - radius);
+                        float pixel = get_pixel_reflect(
+                            input_image, img_x, img_y, c, width, height);
+                        int flipped_kx = kernel_size - 1 - kx;
+                        int flipped_ky = kernel_size - 1 - ky;
+                        sum += pixel *
+                               kernel[flipped_ky * kernel_size + flipped_kx];
+                    }
                 }
+                output_image[(y * width + x) * 3 + c] = sum;
             }
-            output_image[y * width + x] = sum;
         }
     }
 }
@@ -90,25 +92,26 @@ int main(int argc, char **argv) {
         kernel_type = argv[3];
     }
 
-    // Загрузка изображения как одноканального
+    // Загрузка изображения как RGB
     int width, height, channels;
-    img_data = stbi_load(input_file, &width, &height, &channels, 1);
+    img_data = stbi_load(input_file, &width, &height, &channels, 3);
     if (!img_data) {
         fprintf(stderr, "Failed to load image: %s\n", input_file);
         goto cleanup;
     }
+    channels = 3;
 
-    printf("Image loaded: %d x %d, grayscale\n", width, height);
+    printf("Image loaded: %d x %d, RGB\n", width, height);
 
-    int num_pixels = width * height;
-    input_float = (float *)malloc(num_pixels * sizeof(float));
-    output_float = (float *)malloc(num_pixels * sizeof(float));
+    int num_values = width * height * 3;
+    input_float = (float *)malloc(num_values * sizeof(float));
+    output_float = (float *)malloc(num_values * sizeof(float));
     if (!input_float || !output_float) {
         fprintf(stderr, "Memory allocation failed.\n");
         goto cleanup;
     }
 
-    for (int i = 0; i < num_pixels; ++i) {
+    for (int i = 0; i < num_values; ++i) {
         input_float[i] = img_data[i];
     }
     stbi_image_free(img_data);
@@ -133,12 +136,12 @@ int main(int argc, char **argv) {
     }
 
     // Свёртка
-    convolve_grayscale(input_float, width, height, kernel, kernel_size,
+    convolve_rgb(input_float, width, height, kernel, kernel_size,
                        output_float);
 
     // Конвертация обратно в 8 бит
-    result_bytes = (unsigned char *)malloc(num_pixels);
-    for (int i = 0; i < num_pixels; ++i) {
+    result_bytes = (unsigned char *)malloc(num_values);
+    for (int i = 0; i < num_values; ++i) {
         float pixel_value = output_float[i];
         if (is_sobelx) {
             pixel_value = fabsf(pixel_value);
@@ -155,7 +158,7 @@ int main(int argc, char **argv) {
     }
     // Сохранение изображение в формате PNG
     int write_ok =
-        stbi_write_png(output_file, width, height, 1, result_bytes, width);
+    stbi_write_png(output_file, width, height, 3, result_bytes, width * 3);
     if (!write_ok) {
         fprintf(stderr, "Failed to write output image: %s\n", output_file);
         goto cleanup;

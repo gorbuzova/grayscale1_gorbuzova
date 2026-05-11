@@ -13,11 +13,8 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    cv::Mat img_rgb;
-    cv::cvtColor(img_color, img_rgb, cv::COLOR_BGR2RGB);
-
     cv::Mat img;
-    cv::cvtColor(img_rgb, img, cv::COLOR_RGB2GRAY);
+    cv::cvtColor(img_color, img, cv::COLOR_BGR2RGB);
 
     cv::Mat kernel_blur = cv::Mat::ones(3, 3, CV_32F) / 9.0f;
     cv::Mat kernel_identity = cv::Mat::zeros(3, 3, CV_32F);
