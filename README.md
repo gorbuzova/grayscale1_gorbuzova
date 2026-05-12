@@ -1,6 +1,6 @@
-# Свёртка одноканальных изображений
+# Свёртка RGB-изображений
 
-Реализована двумерная для grayscale-изображений с ядрами box blur, identity и Sobel X. Для обработки границ используется reflect101, корректность проверяется сравнением с OpenCV.
+Реализована двумерная свёртка для RGB-изображений с ядрами box blur, identity и Sobel X. Поддерживаются 4 режима обработки границ: reflect101, reflect, replicate и constant (по умолчанию - reflect101). Корректность проверяется сравнением с OpenCV.
 
 ## Сборка
 
@@ -15,16 +15,17 @@ cd ..
 ## Запуск свёртки (из корневой директории)
 
 ```bash
-./build/grayscale <input_image> <output_image> [kernel_type]
+./build/convolution <input_image> <output_image> [kernel_type] [border_mode]
 ```
 
 Примеры:
 
 ```bash
-./build/grayscale images/rose.jpg out.png
-./build/grayscale images/rose.jpg out.png box
-./build/grayscale images/rose.jpg out.png identity
-./build/grayscale images/rose.jpg out.png sobelx
+./build/convolution images/rose.jpg out.png
+./build/convolution images/rose.jpg out.png box reflect101
+./build/convolution images/rose.jpg out.png box reflect
+./build/convolution images/rose.jpg out.png identity replicate
+./build/convolution images/rose.jpg out.png sobelx constant
 ```
 
 По умолчанию используется box.

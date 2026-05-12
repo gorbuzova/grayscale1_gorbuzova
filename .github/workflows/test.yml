@@ -23,7 +23,7 @@ jobs:
         run: clang-format --dry-run --Werror $(find src tests -type f \( -name "*.c" -o -name "*.cpp" \))
 
       - name: clang-tidy check
-        run: run-clang-tidy -p=build src/grayscale.c tests/test.c
+        run: run-clang-tidy -p=build src/convolution.c tests/test.c
 
       - name: Build and Test
         run: bash run_all_tests.sh

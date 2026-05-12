@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Max pixel difference: %f\n", max_difference);
-    double allowed_diff = 39.0;
+    double allowed_diff = 1.0;
 
     if (max_difference <= allowed_diff) {
         printf("Images are similar (max diff <= %.1f).\n", allowed_diff);

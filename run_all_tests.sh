@@ -30,13 +30,13 @@ for IMAGE in "${images[@]}"; do
     ./build/opencv_reference "$IMAGE"
 
     echo "- Running box blur -"
-    ./build/grayscale "$IMAGE" "box3_out_${NAME}.png" box
+    ./build/convolution "$IMAGE" "box3_out_${NAME}.png" box
 
     echo "- Running identity -"
-    ./build/grayscale "$IMAGE" "identity_out_${NAME}.png" identity
+    ./build/convolution "$IMAGE" "identity_out_${NAME}.png" identity
 
     echo "- Running sobelx -"
-    ./build/grayscale "$IMAGE" "sobelx_out_${NAME}.png" sobelx
+    ./build/convolution "$IMAGE" "sobelx_out_${NAME}.png" sobelx
 
     echo "- Comparing results -"
     ./build/test_compare blur_result.png "box3_out_${NAME}.png"
