@@ -14,9 +14,9 @@ typedef enum {
     BORDER_REPLICATE,
     BORDER_CONSTANT
 } border_mode_t;
-/* Метод зеркального отражения относительно границы (без дублирования крайнего пикселя).
-Аналогичен BORDER_REFLECT_101 в OpenCV.
-Предпочтителен для градиентных фильтров, например Sobel. */
+/* Метод зеркального отражения относительно границы (без дублирования крайнего
+пикселя). Аналогичен BORDER_REFLECT_101 в OpenCV. Предпочтителен для градиентных
+фильтров, например Sobel. */
 static int reflect101(int position, int size) {
 
     if (size == 1) {
@@ -33,7 +33,8 @@ static int reflect101(int position, int size) {
     return position;
 }
 
-/* способ похож на reflect101, но здесь крайний пиксель повторяется */
+/* Метод отражения с повторением крайнего пикселя, аналог BORDER_REFLECT в
+ * OpenCV */
 static int reflect(int position, int size) {
     if (size == 1) {
         return 0;
@@ -58,13 +59,14 @@ static int clamp_int(int value, int min_value, int max_value) {
     return value;
 }
 static float get_pixel_border(const float *image_data, int x, int y, int c,
-                              int width, int height, border_mode_t border_mode) {
-/* за границей подставляется одно и то же значение (0) */
-if (border_mode == BORDER_CONSTANT) {
+                              int width, int height,
+                              border_mode_t border_mode) {
+    /* за границей подставляется одно и то же значение (0) */
+    if (border_mode == BORDER_CONSTANT) {
         if (x < 0 || x >= width || y < 0 || y >= height) {
             return 0.0f;
         }
-    /* повторяется ближайший пиксель */
+        /* повторяется ближайший пиксель */
     } else if (border_mode == BORDER_REPLICATE) {
         x = clamp_int(x, 0, width - 1);
         y = clamp_int(y, 0, height - 1);
@@ -79,8 +81,8 @@ if (border_mode == BORDER_CONSTANT) {
 }
 
 void convolve_rgb(const float *input_image, int width, int height,
-                  const float *kernel, int kernel_size,
-                  float *output_image, border_mode_t border_mode) {
+                  const float *kernel, int kernel_size, float *output_image,
+                  border_mode_t border_mode) {
     int radius = kernel_size / 2;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -90,8 +92,9 @@ void convolve_rgb(const float *input_image, int width, int height,
                     for (int kx = 0; kx < kernel_size; ++kx) {
                         int img_x = x + (kx - radius);
                         int img_y = y + (ky - radius);
-                        float pixel = get_pixel_border(input_image, img_x, img_y, c, width, height,
-                               border_mode);
+                        float pixel =
+                            get_pixel_border(input_image, img_x, img_y, c,
+                                             width, height, border_mode);
                         int flipped_kx = kernel_size - 1 - kx;
                         int flipped_ky = kernel_size - 1 - ky;
                         sum += pixel *
@@ -122,10 +125,12 @@ int main(int argc, char **argv) {
 
     if (argc < 3 || argc > 5) {
         fprintf(stderr,
-                "Usage: %s <input_image> <output_image> [kernel_type] [border_mode]\n",
+                "Usage: %s <input_image> <output_image> [kernel_type] "
+                "[border_mode]\n",
                 argv[0]);
         fprintf(stderr, "kernel_type: box (default), identity, sobelx\n");
-        fprintf(stderr, "border_mode: reflect101 (default), reflect, replicate, constant\n");
+        fprintf(stderr, "border_mode: reflect101 (default), reflect, "
+                        "replicate, constant\n");
         return 1;
     }
 
@@ -161,7 +166,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Failed to load image: %s\n", input_file);
         goto cleanup;
     }
-    channels = 3;
 
     printf("Image loaded: %d x %d, RGB\n", width, height);
 
@@ -198,8 +202,8 @@ int main(int argc, char **argv) {
     }
 
     // Свёртка
-    convolve_rgb(input_float, width, height, kernel, kernel_size,
-                       output_float, border_mode);
+    convolve_rgb(input_float, width, height, kernel, kernel_size, output_float,
+                 border_mode);
 
     // Конвертация обратно в 8 бит
     result_bytes = (unsigned char *)malloc(num_values);
@@ -220,7 +224,7 @@ int main(int argc, char **argv) {
     }
     // Сохранение изображение в формате PNG
     int write_ok =
-    stbi_write_png(output_file, width, height, 3, result_bytes, width * 3);
+        stbi_write_png(output_file, width, height, 3, result_bytes, width * 3);
     if (!write_ok) {
         fprintf(stderr, "Failed to write output image: %s\n", output_file);
         goto cleanup;
