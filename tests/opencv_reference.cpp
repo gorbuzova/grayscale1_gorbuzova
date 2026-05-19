@@ -27,16 +27,13 @@ int main(int argc, char **argv) {
         std::cout << "Unknown border mode: " << border_mode_name << std::endl;
         return -1;
     }
-    // Используем stb для чтения и записи изображений.
-    // Так исключаются различия, связанные с вводом/выводом openCV
-    // и сравнивается только корректность самой свёртки.
-    int width, height, channels;
-    unsigned char *img_data = stbi_load(argv[1], &width, &height, &channels, 3);
-    if (!img_data) {
+
+    cv::Mat img = cv::imread(argv[1], cv::IMREAD_COLOR);
+    if (img.empty()) {
         std::cout << "Could not read image: " << argv[1] << std::endl;
         return -1;
     }
-    cv::Mat img(height, width, CV_8UC3, img_data);
+    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
 
     cv::Mat kernel_blur = cv::Mat::ones(3, 3, CV_32F) / 9.0f;
     cv::Mat kernel_identity = cv::Mat::zeros(3, 3, CV_32F);
@@ -53,18 +50,18 @@ int main(int argc, char **argv) {
     cv::flip(kernel_sobel_x, kernel_sobel_x_flipped, -1);
     cv::filter2D(img, sobel_result, CV_32F, kernel_sobel_x_flipped,
                  cv::Point(-1, -1), 0, border_type);
+
     cv::Mat blur_show, identity_show, sobel_show;
     blur_result.convertTo(blur_show, CV_8U);
     identity_result.convertTo(identity_show, CV_8U);
     cv::convertScaleAbs(sobel_result, sobel_show);
-
-    stbi_write_png("blur_result.png", blur_show.cols, blur_show.rows,
-                   blur_show.channels(), blur_show.data, blur_show.step);
-    stbi_write_png("identity_result.png", identity_show.cols,
-                   identity_show.rows, identity_show.channels(),
-                   identity_show.data, identity_show.step);
-    stbi_write_png("sobel_result.png", sobel_show.cols, sobel_show.rows,
-                   sobel_show.channels(), sobel_show.data, sobel_show.step);
+    cv::Mat blur_bgr, identity_bgr, sobel_bgr;
+    cv::cvtColor(blur_show, blur_bgr, cv::COLOR_RGB2BGR);
+    cv::cvtColor(identity_show, identity_bgr, cv::COLOR_RGB2BGR);
+    cv::cvtColor(sobel_show, sobel_bgr, cv::COLOR_RGB2BGR);
+    cv::imwrite("blur_result.png", blur_bgr);
+    cv::imwrite("identity_result.png", identity_bgr);
+    cv::imwrite("sobel_result.png", sobel_bgr);
 
     std::cout << "Results saved:\n";
     std::cout << "  Box blur: blur_result.png\n";
