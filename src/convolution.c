@@ -89,8 +89,8 @@ static float convolve_at_pixel(const float *input_image, int x, int y, int c,
         for (int kx = 0; kx < kernel_size; ++kx) {
             int img_x = x + (kx - radius);
             int img_y = y + (ky - radius);
-            float pixel = get_pixel_border(input_image, img_x, img_y, c,
-                                           width, height, border_mode);
+            float pixel = get_pixel_border(input_image, img_x, img_y, c, width,
+                                           height, border_mode);
             int flipped_kx = kernel_size - 1 - kx;
             int flipped_ky = kernel_size - 1 - ky;
             sum += pixel * kernel[flipped_ky * kernel_size + flipped_kx];
