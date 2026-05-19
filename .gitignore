@@ -1,0 +1,10 @@
+build/
+
+*.o
+*.out
+
+*.png
+*.jpg
+
+!images/rose.jpg
+!images/girl.png
