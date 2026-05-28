@@ -18,9 +18,9 @@ add_executable(opencv_reference tests/opencv_reference.cpp)
 
 target_link_libraries(opencv_reference ${OpenCV_LIBS})
 
-add_executable(grayscale src/grayscale.c)
+add_executable(convolution src/convolution.c)
 
-target_link_libraries(grayscale m)
+target_link_libraries(convolution m)
 
 add_executable(test_compare tests/test.c)
 

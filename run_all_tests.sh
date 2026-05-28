@@ -16,6 +16,7 @@ if [ ${#images[@]} -eq 0 ]; then
     exit 1
 fi
 
+border_modes=(reflect101 reflect replicate constant)
 for IMAGE in "${images[@]}"; do
     if [ ! -f "$IMAGE" ]; then
         continue
@@ -24,25 +25,28 @@ for IMAGE in "${images[@]}"; do
     BASENAME=$(basename "$IMAGE")
     NAME="${BASENAME%.*}"
 
-    echo "Testing image: $IMAGE"
+    for BORDER_MODE in "${border_modes[@]}"; do
+        echo "Testing image: $IMAGE, border mode: $BORDER_MODE"
 
-    echo "- Generating OpenCV reference -"
-    ./build/opencv_reference "$IMAGE"
+        echo "- Generating OpenCV reference -"
+        ./build/opencv_reference "$IMAGE" "$BORDER_MODE"
 
-    echo "- Running box blur -"
-    ./build/grayscale "$IMAGE" "box3_out_${NAME}.png" box
+        echo "- Running box blur -"
+        ./build/convolution "$IMAGE" "box3_out_${NAME}_${BORDER_MODE}.png" box "$BORDER_MODE"
 
-    echo "- Running identity -"
-    ./build/grayscale "$IMAGE" "identity_out_${NAME}.png" identity
+        echo "- Running identity -"
+        ./build/convolution "$IMAGE" "identity_out_${NAME}_${BORDER_MODE}.png" identity "$BORDER_MODE"
 
-    echo "- Running sobelx -"
-    ./build/grayscale "$IMAGE" "sobelx_out_${NAME}.png" sobelx
+        echo "- Running sobelx -"
+        ./build/convolution "$IMAGE" "sobelx_out_${NAME}_${BORDER_MODE}.png" sobelx "$BORDER_MODE"
 
-    echo "- Comparing results -"
-    ./build/test_compare blur_result.png "box3_out_${NAME}.png"
-    ./build/test_compare identity_result.png "identity_out_${NAME}.png"
-    ./build/test_compare sobel_result.png "sobelx_out_${NAME}.png"
+        echo "- Comparing results -"
+        ./build/test_compare blur_result.png "box3_out_${NAME}_${BORDER_MODE}.png"
+        ./build/test_compare identity_result.png "identity_out_${NAME}_${BORDER_MODE}.png"
+        ./build/test_compare sobel_result.png "sobelx_out_${NAME}_${BORDER_MODE}.png"
+    done
 done
+
 
 echo "All tests completed"
 
