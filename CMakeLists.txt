@@ -26,8 +26,10 @@ add_executable(test_compare tests/test.c)
 
 target_link_libraries(test_compare m)
 
-add_executable(benchmark experiments/benchmark.c)
-
 add_executable(benchmark_opencv experiments/benchmark_opencv.cpp)
 
 target_link_libraries(benchmark_opencv ${OpenCV_LIBS})
+
+add_executable(benchmark experiments/benchmark.c)
+
+target_link_libraries(benchmark m)
