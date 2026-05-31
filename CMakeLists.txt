@@ -30,6 +30,4 @@ add_executable(benchmark_opencv experiments/benchmark_opencv.cpp)
 
 target_link_libraries(benchmark_opencv ${OpenCV_LIBS})
 
-add_executable(benchmark experiments/benchmark.c)
-
-target_link_libraries(benchmark m)
+add_executable(benchmark experiments/benchmark.c src/convolution.c)
