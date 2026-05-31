@@ -11,21 +11,15 @@ static float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9,
                                 1.0f / 9, 1.0f / 9, 1.0f / 9};
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
-        printf("Usage: %s <width> <height> <output_measurements_file>\n",
-               argv[0]);
+    if (argc != 2) {
+        printf("Usage: %s <output_measurements_file>\n", argv[0]);
         return 1;
     }
 
-    int width = atoi(argv[1]);
-    int height = atoi(argv[2]);
-    const char *measurements_file = argv[3];
+    const char *measurements_file = argv[1];
 
-    if (width <= 0 || height <= 0) {
-        printf("Width and height must be positive numbers.\n");
-        return 1;
-    }
-
+    const int width = 2560;
+    const int height = 1920;
     const int number_of_warmup_runs = 3;
     const int number_of_measurements = 40;
     const int kernel_size = 3;
