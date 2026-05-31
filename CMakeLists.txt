@@ -18,7 +18,7 @@ add_executable(opencv_reference tests/opencv_reference.cpp)
 
 target_link_libraries(opencv_reference ${OpenCV_LIBS})
 
-add_executable(convolution src/convolution.c)
+add_executable(convolution src/main.c src/convolution.c)
 
 target_link_libraries(convolution m)
 
