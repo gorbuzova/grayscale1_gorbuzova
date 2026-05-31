@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
-
 def read_measurements(file_name):
     measurements = []
     file = open(file_name, "r")
@@ -19,7 +18,6 @@ def read_measurements(file_name):
             measurements.append(float(text))
     file.close()
     return np.array(measurements)
-
 
 def round_error(error):
     # Округляем погрешность до одной значащей цифры (или до двух, если первая
@@ -34,13 +32,11 @@ def round_error(error):
     rounded_error = round(error, number_of_decimals)
     return rounded_error, number_of_decimals
 
-
 def format_value(value, number_of_decimals):
     # Если округляем до целых и крупнее - печатаем без дробной части
     if number_of_decimals <= 0:
         return str(int(round(value, number_of_decimals)))
     return str(round(value, number_of_decimals))
-
 
 def analyze_measurements(measurements, name):
     print("Анализ серии измерений:", name)
@@ -93,7 +89,6 @@ def analyze_measurements(measurements, name):
 
     return mean_value, confidence_interval
 
-
 def main():
     if len(sys.argv) != 3:
         print("Использование: python experiment_analysis.py "
@@ -109,7 +104,7 @@ def main():
                                                      "opencv")
 
     # Сравнение реализаций (так как времена сильно разного порядка, сравниваем
-    # через относительные погрешности).
+    # через относительные погрешности)
     print("Сравнение реализаций")
     ratio = my_mean / opencv_mean
     my_relative_error = my_error / my_mean
@@ -129,5 +124,5 @@ def main():
         print("Моя реализация быстрее в",
               format_value(1 / ratio, number_of_decimals), "раз(а).")
 
-
-main()
+if __name__ == "__main__":
+    main()
