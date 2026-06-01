@@ -9,15 +9,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 
-def read_measurements(file_name):
-    measurements = []
+def read_measurements_by_size(file_name):
+    measurements_by_size = {}
     file = open(file_name, "r")
     for line in file:
         text = line.strip()
         if text != "":
-            measurements.append(float(text))
+            parts = text.split()
+            width = int(parts[0])
+            height = int(parts[1])
+            milliseconds = float(parts[2])
+            size = (width, height)
+            if size not in measurements_by_size:
+                measurements_by_size[size] = []
+            measurements_by_size[size].append(milliseconds)
     file.close()
-    return np.array(measurements)
+    for size in measurements_by_size:
+        measurements_by_size[size] = np.array(measurements_by_size[size])
+    return measurements_by_size
 
 def round_error(error):
     # Округляем погрешность до одной значащей цифры (или до двух, если первая
@@ -95,34 +104,63 @@ def main():
               "<файл_моих_измерений> <файл_измерений_opencv>")
         return
 
-    my_measurements = read_measurements(sys.argv[1])
-    opencv_measurements = read_measurements(sys.argv[2])
+    my_measurements_by_size = read_measurements_by_size(sys.argv[1])
+    opencv_measurements_by_size = read_measurements_by_size(sys.argv[2])
 
-    my_mean, my_error = analyze_measurements(my_measurements,
-                                             "my_implementation")
-    opencv_mean, opencv_error = analyze_measurements(opencv_measurements,
-                                                     "opencv")
+    # Размеры сортируем по количеству пикселей
+    sizes = sorted(my_measurements_by_size.keys(),
+                   key=lambda size: size[0] * size[1])
 
-    # Сравнение реализаций (так как времена сильно разного порядка, сравниваем
-    # через относительные погрешности)
-    print("Сравнение реализаций")
-    ratio = my_mean / opencv_mean
-    my_relative_error = my_error / my_mean
-    opencv_relative_error = opencv_error / opencv_mean
-    ratio_relative_error = math.sqrt(my_relative_error ** 2
-                                     + opencv_relative_error ** 2)
-    ratio_error = ratio * ratio_relative_error
-    rounded_ratio_error, number_of_decimals = round_error(ratio_error)
-    print("Отношение среднего времени (моя реализация / OpenCV):",
-          format_value(ratio, number_of_decimals),
-          "+/-",
-          format_value(rounded_ratio_error, number_of_decimals))
-    if ratio > 1:
-        print("OpenCV быстрее в", format_value(ratio, number_of_decimals),
-              "раз(а).")
-    else:
-        print("Моя реализация быстрее в",
-              format_value(1 / ratio, number_of_decimals), "раз(а).")
+    pixel_counts = []
+    my_mean_times = []
+    opencv_mean_times = []
+
+    for size in sizes:
+        width, height = size
+        size_name = str(width) + "x" + str(height)
+        print("Размер изображения:", size_name)
+
+        my_mean, my_error = analyze_measurements(
+            my_measurements_by_size[size], "my_implementation_" + size_name)
+        opencv_mean, opencv_error = analyze_measurements(
+            opencv_measurements_by_size[size], "opencv_" + size_name)
+
+        # Сравнение реализаций (так как времена сильно разного порядка, сравниваем
+        # через относительные погрешности)
+        print("Сравнение реализаций")
+        ratio = my_mean / opencv_mean
+        my_relative_error = my_error / my_mean
+        opencv_relative_error = opencv_error / opencv_mean
+        ratio_relative_error = math.sqrt(my_relative_error ** 2
+                                         + opencv_relative_error ** 2)
+        ratio_error = ratio * ratio_relative_error
+        rounded_ratio_error, number_of_decimals = round_error(ratio_error)
+        print("Отношение среднего времени (моя реализация / OpenCV):",
+              format_value(ratio, number_of_decimals),
+              "+/-",
+              format_value(rounded_ratio_error, number_of_decimals))
+        if ratio > 1:
+            print("OpenCV быстрее в", format_value(ratio, number_of_decimals),
+                  "раз(а).")
+        else:
+            print("Моя реализация быстрее в",
+                  format_value(1 / ratio, number_of_decimals), "раз(а).")
+
+        pixel_counts.append(width * height)
+        my_mean_times.append(my_mean)
+        opencv_mean_times.append(opencv_mean)
+
+    # График зависимости времени свёртки от размера изображения для обеих реализаций
+    plt.figure()
+    plt.plot(pixel_counts, my_mean_times, marker="o", label="Моя реализация")
+    plt.plot(pixel_counts, opencv_mean_times, marker="o", label="OpenCV")
+    plt.xlabel("Количество пикселей")
+    plt.ylabel("Время, мс")
+    plt.title("Зависимость времени свёртки от размера изображения")
+    plt.legend()
+    plt.savefig("speedup.png")
+    plt.close()
+    print("График сохранён в файл: speedup.png")
 
 if __name__ == "__main__":
     main()
