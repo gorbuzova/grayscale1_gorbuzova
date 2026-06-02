@@ -1,8 +1,7 @@
 #include "convolution.h"
 
-const float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9,
-                               1.0f / 9, 1.0f / 9, 1.0f / 9,
-                               1.0f / 9, 1.0f / 9, 1.0f / 9};
+const float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9,
+                               1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9};
 
 const float identity_3x3[9] = {0, 0, 0, 0, 1, 0, 0, 0, 0};
 
