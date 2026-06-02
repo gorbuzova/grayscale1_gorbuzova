@@ -10,14 +10,6 @@
 
 #include "convolution.h"
 
-static float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9,
-                                1.0f / 9, 1.0f / 9, 1.0f / 9,
-                                1.0f / 9, 1.0f / 9, 1.0f / 9};
-
-static float identity_3x3[9] = {0, 0, 0, 0, 1, 0, 0, 0, 0};
-
-static float sobel_x_3x3[9] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
-
 int main(int argc, char **argv) {
     unsigned char *img_data = NULL;
     float *input_float = NULL;

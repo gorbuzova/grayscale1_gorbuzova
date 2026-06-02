@@ -5,10 +5,7 @@
 #include <time.h>
 
 #include "../src/convolution.h"
-
-static float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9,
-                                1.0f / 9, 1.0f / 9, 1.0f / 9,
-                                1.0f / 9, 1.0f / 9, 1.0f / 9};
+#include "benchmark_config.h"
 
 int main(int argc, char **argv) {
     if (argc != 2) {
@@ -18,14 +15,7 @@ int main(int argc, char **argv) {
 
     const char *measurements_file = argv[1];
 
-    const int number_of_warmup_runs = 3;
-    const int number_of_measurements = 40;
     const int kernel_size = 3;
-
-    /* Размеры изображений для эксперимента (ширина и высота) */
-    const int widths[3] = {1280, 1920, 2560};
-    const int heights[3] = {960, 1440, 1920};
-    const int number_of_sizes = 3;
 
     FILE *output = fopen(measurements_file, "w");
     if (!output) {
@@ -40,10 +30,13 @@ int main(int argc, char **argv) {
         int number_of_values = width * height * 3;
         float *input_image = (float *)malloc(number_of_values * sizeof(float));
         float *output_image = (float *)malloc(number_of_values * sizeof(float));
-        if (!input_image || !output_image) {
+        unsigned char *result_bytes =
+            (unsigned char *)malloc(number_of_values);
+        if (!input_image || !output_image || !result_bytes) {
             printf("Memory allocation failed.\n");
             free(input_image);
             free(output_image);
+            free(result_bytes);
             fclose(output);
             return 1;
         }
@@ -69,6 +62,19 @@ int main(int argc, char **argv) {
             clock_gettime(CLOCK_MONOTONIC, &start_time);
             convolve_rgb(input_image, width, height, box_blur_3x3, kernel_size,
                          output_image, BORDER_REFLECT101);
+            /* Перевод результата обратно в 8 бит тоже входит в измеряемое время */
+            for (int index = 0; index < number_of_values; ++index) {
+                float pixel_value = output_image[index];
+                int clipped_int = (pixel_value >= 0) ? (int)(pixel_value + 0.5f)
+                                                     : (int)(pixel_value - 0.5f);
+                if (clipped_int < 0) {
+                    clipped_int = 0;
+                }
+                if (clipped_int > 255) {
+                    clipped_int = 255;
+                }
+                result_bytes[index] = (unsigned char)clipped_int;
+            }
             clock_gettime(CLOCK_MONOTONIC, &end_time);
 
             double seconds = (double)(end_time.tv_sec - start_time.tv_sec);
@@ -82,6 +88,7 @@ int main(int argc, char **argv) {
 
         free(input_image);
         free(output_image);
+        free(result_bytes);
     }
 
     fclose(output);

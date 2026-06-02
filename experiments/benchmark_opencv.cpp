@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <opencv2/opencv.hpp>
 
+#include "benchmark_config.h"
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         printf("Usage: %s <output_measurements_file>\n", argv[0]);
@@ -10,20 +12,13 @@ int main(int argc, char **argv) {
 
     const char *measurements_file = argv[1];
 
-    const int number_of_warmup_runs = 3;
-    const int number_of_measurements = 40;
-
-    // Размеры изображений для эксперимента (ширина и высота)
-    const int widths[3] = {1280, 1920, 2560};
-    const int heights[3] = {960, 1440, 1920};
-    const int number_of_sizes = 3;
-
     // Моя реализация однопоточная, поэтому для честного сравнения запрещаем
     // OpenCV использовать несколько потоков
     cv::setNumThreads(1);
 
     cv::Mat kernel_box_blur = cv::Mat::ones(3, 3, CV_32F) / 9.0f;
     cv::Mat output_image;
+    cv::Mat result_bytes;
 
     FILE *output = fopen(measurements_file, "w");
     if (!output) {
@@ -53,6 +48,8 @@ int main(int argc, char **argv) {
 
             cv::filter2D(image, output_image, CV_32F, kernel_box_blur,
                          cv::Point(-1, -1), 0, cv::BORDER_REFLECT_101);
+            // Перевод результата обратно в 8 бит тоже входит в измеряемое время
+            output_image.convertTo(result_bytes, CV_8U);
 
             std::chrono::steady_clock::time_point end_time =
                 std::chrono::steady_clock::now();
