@@ -112,8 +112,11 @@ def main():
                    key=lambda size: size[0] * size[1])
 
     pixel_counts = []
+    size_labels = []
     my_mean_times = []
     opencv_mean_times = []
+    my_errors = []
+    opencv_errors = []
 
     for size in sizes:
         width, height = size
@@ -147,20 +150,46 @@ def main():
                   format_value(1 / ratio, number_of_decimals), "раз(а).")
 
         pixel_counts.append(width * height)
+        size_labels.append(size_name)
         my_mean_times.append(my_mean)
         opencv_mean_times.append(opencv_mean)
+        my_errors.append(my_error)
+        opencv_errors.append(opencv_error)
 
-    # График зависимости времени свёртки от размера изображения для обеих реализаций
+    # График зависимости времени свёртки от размера изображения для обеих
+    # реализаций. Логарифмическая шкала по y и "усы" ошибок
     plt.figure()
-    plt.plot(pixel_counts, my_mean_times, marker="o", label="Моя реализация")
-    plt.plot(pixel_counts, opencv_mean_times, marker="o", label="OpenCV")
+    plt.errorbar(pixel_counts, my_mean_times, yerr=my_errors, marker="o",
+                 capsize=4, label="Моя реализация")
+    plt.errorbar(pixel_counts, opencv_mean_times, yerr=opencv_errors,
+                 marker="o", capsize=4, label="OpenCV")
     plt.xlabel("Количество пикселей")
     plt.ylabel("Время, мс")
+    plt.yscale("log")
     plt.title("Зависимость времени свёртки от размера изображения")
     plt.legend()
     plt.savefig("speedup.png")
     plt.close()
     print("График сохранён в файл: speedup.png")
 
+    # Сводная столбчатая диаграмма для сравнения реализаций (с "усами" ошибок)
+    positions = np.arange(len(size_labels))
+    bar_width = 0.35
+    plt.figure()
+    plt.bar(positions - bar_width / 2, my_mean_times, bar_width,
+            yerr=my_errors, capsize=4, label="Моя реализация")
+    plt.bar(positions + bar_width / 2, opencv_mean_times, bar_width,
+            yerr=opencv_errors, capsize=4, label="OpenCV")
+    plt.xticks(positions, size_labels)
+    plt.xlabel("Размер изображения")
+    plt.ylabel("Время, мс")
+    plt.yscale("log")
+    plt.title("Сравнение времени свёртки")
+    plt.legend()
+    plt.savefig("comparison.png")
+    plt.close()
+    print("Сводная диаграмма сохранена в файл: comparison.png")
+
 if __name__ == "__main__":
     main()
+
