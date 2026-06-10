@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,7 +53,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Unknown border mode: %s\n", border_mode_name);
         goto cleanup;
     }
-    // Загрузка изображения как RGB
+    /* Загрузка изображения как RGB */
     int width, height, channels;
     img_data = stbi_load(input_file, &width, &height, &channels, 3);
     if (!img_data) {
@@ -78,7 +77,7 @@ int main(int argc, char **argv) {
     stbi_image_free(img_data);
     img_data = NULL;
 
-    // Создаём ядро
+    /* Создаём ядро */
     kernel = (float *)malloc(kernel_size * kernel_size * sizeof(float));
     if (!kernel) {
         fprintf(stderr, "Memory allocation failed.\n");
@@ -96,28 +95,19 @@ int main(int argc, char **argv) {
         memcpy(kernel, box_blur_3x3, sizeof(box_blur_3x3));
     }
 
-    // Свёртка
+    /* Свёртка */
     convolve_rgb(input_float, width, height, kernel, kernel_size, output_float,
                  border_mode);
 
-    // Конвертация обратно в 8 бит
+    /* Конвертация обратно в 8 бит */
     result_bytes = (unsigned char *)malloc(num_values);
-    for (int i = 0; i < num_values; ++i) {
-        float pixel_value = output_float[i];
-        if (is_sobelx) {
-            pixel_value = fabsf(pixel_value);
-        }
-        int clipped_int = (pixel_value >= 0) ? (int)(pixel_value + 0.5f)
-                                             : (int)(pixel_value - 0.5f);
-        if (clipped_int < 0) {
-            clipped_int = 0;
-        }
-        if (clipped_int > 255) {
-            clipped_int = 255;
-        }
-        result_bytes[i] = (unsigned char)clipped_int;
+    if (!result_bytes) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        goto cleanup;
     }
-    // Сохранение изображение в формате PNG
+    convert_to_bytes(output_float, num_values, is_sobelx, result_bytes);
+
+    /* Сохранение изображение в формате PNG */
     int write_ok =
         stbi_write_png(output_file, width, height, 3, result_bytes, width * 3);
     if (!write_ok) {

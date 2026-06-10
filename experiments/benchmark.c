@@ -62,19 +62,8 @@ int main(int argc, char **argv) {
             clock_gettime(CLOCK_MONOTONIC, &start_time);
             convolve_rgb(input_image, width, height, box_blur_3x3, kernel_size,
                          output_image, BORDER_REFLECT101);
-            /* Перевод результата обратно в 8 бит тоже входит в измеряемое время */
-            for (int index = 0; index < number_of_values; ++index) {
-                float pixel_value = output_image[index];
-                int clipped_int = (pixel_value >= 0) ? (int)(pixel_value + 0.5f)
-                                                     : (int)(pixel_value - 0.5f);
-                if (clipped_int < 0) {
-                    clipped_int = 0;
-                }
-                if (clipped_int > 255) {
-                    clipped_int = 255;
-                }
-                result_bytes[index] = (unsigned char)clipped_int;
-            }
+            /* Перевод результата обратно в 8 бит входит в измеряемое время */
+            convert_to_bytes(output_image, number_of_values, 0, result_bytes);
             clock_gettime(CLOCK_MONOTONIC, &end_time);
 
             double seconds = (double)(end_time.tv_sec - start_time.tv_sec);

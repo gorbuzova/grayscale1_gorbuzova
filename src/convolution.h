@@ -16,4 +16,7 @@ void convolve_rgb(const float *input_image, int width, int height,
                   const float *kernel, int kernel_size, float *output_image,
                   border_mode_t border_mode);
 
+void convert_to_bytes(const float *values, int count,
+                      int take_absolute_value, unsigned char *output);
+
 #endif
