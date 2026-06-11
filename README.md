@@ -56,16 +56,20 @@ cp ~/Downloads/your_image.jpg images/
 
 Сборка происходит вместе с остальными целями (см. раздел «Сборка»).
 
-Запуск бенчмарков из корня:
+#Запуск бенчмарков из корня:
 
+```bash
 ./build/benchmark my_measurements.txt
 ./build/benchmark_opencv opencv_measurements.txt
+```
 
 Каждый пишет в файл строки вида `ширина высота время_мс`.
 
-Анализ (нужны numpy, scipy, matplotlib - `pip install numpy scipy matplotlib`):
+#Анализ (нужны numpy, scipy, matplotlib - `pip install numpy scipy matplotlib`):
 
+```bash
 python experiments/experiment_analysis.py my_measurements.txt opencv_measurements.txt
+```
 
 По каждому размеру скрипт строит гистограмму, проверяет нормальность
 (normaltest и shapiro), считает среднее, стандартное отклонение и
