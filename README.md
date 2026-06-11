@@ -56,7 +56,7 @@ cp ~/Downloads/your_image.jpg images/
 
 Сборка происходит вместе с остальными целями (см. раздел «Сборка»).
 
-#Запуск бенчмарков из корня:
+# Запуск бенчмарков из корня:
 
 ```bash
 ./build/benchmark my_measurements.txt
@@ -65,7 +65,7 @@ cp ~/Downloads/your_image.jpg images/
 
 Каждый пишет в файл строки вида `ширина высота время_мс`.
 
-#Анализ (нужны numpy, scipy, matplotlib - `pip install numpy scipy matplotlib`):
+# Анализ (нужны numpy, scipy, matplotlib - `pip install numpy scipy matplotlib`):
 
 ```bash
 python experiments/experiment_analysis.py my_measurements.txt opencv_measurements.txt
