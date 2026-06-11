@@ -13,7 +13,6 @@ int main(int argc, char **argv) {
     unsigned char *img_data = NULL;
     float *input_float = NULL;
     float *output_float = NULL;
-    float *kernel = NULL;
     unsigned char *result_bytes = NULL;
     int status = 1;
 
@@ -78,21 +77,15 @@ int main(int argc, char **argv) {
     img_data = NULL;
 
     /* Создаём ядро */
-    kernel = (float *)malloc(kernel_size * kernel_size * sizeof(float));
-    if (!kernel) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        goto cleanup;
-    }
-
-    const int is_identity = strcmp(kernel_type, "identity") == 0;
     const int is_sobelx = strcmp(kernel_type, "sobelx") == 0;
 
-    if (is_identity) {
-        memcpy(kernel, identity_3x3, sizeof(identity_3x3));
+    const float *kernel;
+    if (strcmp(kernel_type, "identity") == 0) {
+        kernel = identity_3x3;
     } else if (is_sobelx) {
-        memcpy(kernel, sobel_x_3x3, sizeof(sobel_x_3x3));
+        kernel = sobel_x_3x3;
     } else {
-        memcpy(kernel, box_blur_3x3, sizeof(box_blur_3x3));
+        kernel = box_blur_3x3;
     }
 
     /* Свёртка */
@@ -122,7 +115,6 @@ cleanup:
     stbi_image_free(img_data);
     free(input_float);
     free(output_float);
-    free(kernel);
     free(result_bytes);
     return status;
 }
