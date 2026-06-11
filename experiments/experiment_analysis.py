@@ -28,6 +28,23 @@ def read_measurements_by_size(file_name):
         measurements_by_size[size] = np.array(measurements_by_size[size])
     return measurements_by_size
 
+def remove_outliers(measurements):
+    # Критерий Шовене
+    count = len(measurements)
+    mean_value = np.mean(measurements)
+    standard_deviation = np.std(measurements, ddof=1)
+
+    if standard_deviation == 0:
+        return measurements, np.array([])
+
+    deviations_in_sigmas = np.abs(measurements - mean_value) / standard_deviation
+    probabilities = 2 * (1 - stats.norm.cdf(deviations_in_sigmas))
+    is_outlier = count * probabilities < 0.5
+
+    kept = measurements[~is_outlier]
+    removed = measurements[is_outlier]
+    return kept, removed
+
 def round_error(error):
     # Округляем погрешность до одной значащей цифры (или до двух, если первая
     # значащая цифра - единица)
@@ -49,7 +66,15 @@ def format_value(value, number_of_decimals):
 
 def analyze_measurements(measurements, name):
     print("Анализ серии измерений:", name)
-    print("Количество измерений:", len(measurements))
+    print("Количество измерений до отсева выбросов:", len(measurements))
+
+    # Отсев выбросов по критерию Шовене до построения статистик
+    measurements, removed = remove_outliers(measurements)
+    if len(removed) > 0:
+        print("Удалено выбросов:", len(removed),
+              "(значения:", ", ".join(format(value, ".1f") for value in removed),
+              "мс)")
+    print("Количество измерений после отсева выбросов:", len(measurements))
 
     # Строим гистограмму
     plt.figure()
