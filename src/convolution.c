@@ -109,15 +109,15 @@ void convolve_rgb(const float *input_image, int width, int height,
 
 /* Перевод результата свёртки в 8-битное изображение: округление до
  * ближайшего целого и обрезка в диапазон [0, 255] */
-void convert_to_bytes(const float *values, int count,
-                      int take_absolute_value, unsigned char *output) {
+void convert_to_bytes(const float *values, int count, int take_absolute_value,
+                      unsigned char *output) {
     for (int i = 0; i < count; ++i) {
         float value = values[i];
         if (take_absolute_value && value < 0.0f) {
             value = -value;
         }
-        int rounded_value = (value >= 0.0f) ? (int)(value + 0.5f)
-                                            : (int)(value - 0.5f);
+        int rounded_value =
+            (value >= 0.0f) ? (int)(value + 0.5f) : (int)(value - 0.5f);
         if (rounded_value < 0) {
             rounded_value = 0;
         }

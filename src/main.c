@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     stbi_image_free(img_data);
     img_data = NULL;
 
-    /* Создаём ядро */
+    /* Выбор ядра */
     const int is_sobelx = strcmp(kernel_type, "sobelx") == 0;
 
     const float *kernel;
