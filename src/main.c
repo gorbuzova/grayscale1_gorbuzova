@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     }
     convert_to_bytes(output_float, num_values, is_sobelx, result_bytes);
 
-    /* Сохранение изображение в формате PNG */
+    /* Сохранение изображения в формате PNG */
     int write_ok =
         stbi_write_png(output_file, width, height, 3, result_bytes, width * 3);
     if (!write_ok) {

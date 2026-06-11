@@ -11,10 +11,11 @@ from scipy import stats
 
 def read_measurements_by_size(file_name):
     measurements_by_size = {}
-    file = open(file_name, "r")
-    for line in file:
-        text = line.strip()
-        if text != "":
+    with open(file_name, "r") as file:
+        for line in file:
+            text = line.strip()
+            if text == "":
+                continue
             parts = text.split()
             width = int(parts[0])
             height = int(parts[1])
@@ -23,7 +24,6 @@ def read_measurements_by_size(file_name):
             if size not in measurements_by_size:
                 measurements_by_size[size] = []
             measurements_by_size[size].append(milliseconds)
-    file.close()
     for size in measurements_by_size:
         measurements_by_size[size] = np.array(measurements_by_size[size])
     return measurements_by_size
@@ -77,7 +77,7 @@ def analyze_measurements(measurements, name):
     mean_value = np.mean(measurements)
     standard_deviation = np.std(measurements, ddof=1)
     relative_deviation = standard_deviation / mean_value * 100
-    print("Среднее отклонение:", mean_value, "мс")
+    print("Среднее время:", mean_value, "мс")
     print("Стандартное отклонение:", standard_deviation, "мс")
     print("Отношение отклонения к среднему:", relative_deviation, "%")
     if relative_deviation > 10:
