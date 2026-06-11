@@ -60,7 +60,7 @@ static float get_pixel_border(const float *image_data, int x, int y, int c,
         if (x < 0 || x >= width || y < 0 || y >= height) {
             return 0.0f;
         }
-    /* повторяется ближайший пиксель */
+        /* повторяется ближайший пиксель */
     } else if (border_mode == BORDER_REPLICATE) {
         x = clamp_int(x, 0, width - 1);
         y = clamp_int(y, 0, height - 1);
