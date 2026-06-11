@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
         for (int run = 0; run < number_of_warmup_runs; ++run) {
             convolve_rgb(input_image, width, height, box_blur_3x3, kernel_size,
                          output_image, BORDER_REFLECT101);
+            convert_to_bytes(output_image, number_of_values, 0, result_bytes);
         }
 
         for (int run = 0; run < number_of_measurements; ++run) {
