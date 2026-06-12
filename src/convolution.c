@@ -1,4 +1,5 @@
 #include "convolution.h"
+#include <stdlib.h>
 
 const float box_blur_3x3[9] = {1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9,
                                1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9};
@@ -60,8 +61,8 @@ static float get_pixel_border(const float *image_data, int x, int y, int c,
         if (x < 0 || x >= width || y < 0 || y >= height) {
             return 0.0f;
         }
-        /* повторяется ближайший пиксель */
     } else if (border_mode == BORDER_REPLICATE) {
+        /* повторяется ближайший пиксель */
         x = clamp_int(x, 0, width - 1);
         y = clamp_int(y, 0, height - 1);
     } else if (border_mode == BORDER_REFLECT) {
@@ -93,17 +94,11 @@ static float convolve_at_pixel(const float *input_image, int x, int y, int c,
     return sum;
 }
 
-void convolve_rgb(const float *input_image, int width, int height,
-                  const float *kernel, int kernel_size, float *output_image,
-                  border_mode_t border_mode) {
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            for (int c = 0; c < 3; ++c) {
-                output_image[(y * width + x) * 3 + c] =
-                    convolve_at_pixel(input_image, x, y, c, width, height,
-                                      kernel, kernel_size, border_mode);
-            }
-        }
+/*  Преобразует байтовое изображение (0-255) во float для вычислений */
+static void bytes_to_float(const unsigned char *input, int count,
+                           float *output) {
+    for (int i = 0; i < count; ++i) {
+        output[i] = (float)input[i];
     }
 }
 
@@ -126,4 +121,44 @@ void convert_to_bytes(const float *values, int count, int take_absolute_value,
         }
         output[i] = (unsigned char)rounded_value;
     }
+}
+
+/* Вычисляет свёртку: float на входе и на выходе */
+static void convolve_float(const float *input_image, int width, int height,
+                           const float *kernel, int kernel_size,
+                           float *output_image, border_mode_t border_mode) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            for (int c = 0; c < 3; ++c) {
+                output_image[(y * width + x) * 3 + c] =
+                    convolve_at_pixel(input_image, x, y, c, width, height,
+                                      kernel, kernel_size, border_mode);
+            }
+        }
+    }
+}
+
+/* Свёртка 8-битного изображения: перевод во float, свёртка, перевод обратно в
+ * байты  */
+int convolve_rgb(const unsigned char *input_image, int width, int height,
+                 const float *kernel, int kernel_size, int take_absolute_value,
+                 unsigned char *output_image, border_mode_t border_mode) {
+    int count = width * height * 3;
+
+    float *input_float = (float *)malloc(count * sizeof(float));
+    float *output_float = (float *)malloc(count * sizeof(float));
+    if (!input_float || !output_float) {
+        free(input_float);
+        free(output_float);
+        return 1;
+    }
+
+    bytes_to_float(input_image, count, input_float);
+    convolve_float(input_float, width, height, kernel, kernel_size,
+                   output_float, border_mode);
+    convert_to_bytes(output_float, count, take_absolute_value, output_image);
+
+    free(input_float);
+    free(output_float);
+    return 0;
 }

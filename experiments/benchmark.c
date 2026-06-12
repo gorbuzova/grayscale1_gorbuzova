@@ -28,14 +28,13 @@ int main(int argc, char **argv) {
         const int height = heights[size_index];
 
         int number_of_values = width * height * 3;
-        float *input_image = (float *)malloc(number_of_values * sizeof(float));
-        float *output_image = (float *)malloc(number_of_values * sizeof(float));
+        unsigned char *input_image =
+            (unsigned char *)malloc(number_of_values);
         unsigned char *result_bytes =
             (unsigned char *)malloc(number_of_values);
-        if (!input_image || !output_image || !result_bytes) {
+        if (!input_image || !result_bytes) {
             printf("Memory allocation failed.\n");
             free(input_image);
-            free(output_image);
             free(result_bytes);
             fclose(output);
             return 1;
@@ -44,16 +43,16 @@ int main(int argc, char **argv) {
         /* Заполняем изображение случайными значениями от 0 до 255 */
         srand(12345);
         for (int index = 0; index < number_of_values; ++index) {
-            input_image[index] = (float)(rand() % 256);
+            input_image[index] = (unsigned char)(rand() % 256);
         }
+
         printf("Random image created: %d x %d, RGB\n", width, height);
 
         /* Прогревочные запуски: первые запуски обычно медленнее из-за
          * "холодного" кеша процессора, поэтому их результаты не записываем. */
         for (int run = 0; run < number_of_warmup_runs; ++run) {
             convolve_rgb(input_image, width, height, box_blur_3x3, kernel_size,
-                         output_image, BORDER_REFLECT101);
-            convert_to_bytes(output_image, number_of_values, 0, result_bytes);
+                         0, result_bytes, BORDER_REFLECT101);
         }
 
         for (int run = 0; run < number_of_measurements; ++run) {
@@ -62,10 +61,9 @@ int main(int argc, char **argv) {
 
             clock_gettime(CLOCK_MONOTONIC, &start_time);
             convolve_rgb(input_image, width, height, box_blur_3x3, kernel_size,
-                         output_image, BORDER_REFLECT101);
-            /* Перевод результата обратно в 8 бит входит в измеряемое время */
-            convert_to_bytes(output_image, number_of_values, 0, result_bytes);
+                         0, result_bytes, BORDER_REFLECT101);
             clock_gettime(CLOCK_MONOTONIC, &end_time);
+
 
             double seconds = (double)(end_time.tv_sec - start_time.tv_sec);
             double nanoseconds = (double)(end_time.tv_nsec - start_time.tv_nsec);
@@ -77,7 +75,6 @@ int main(int argc, char **argv) {
         }
 
         free(input_image);
-        free(output_image);
         free(result_bytes);
     }
 

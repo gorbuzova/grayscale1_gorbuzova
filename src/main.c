@@ -11,8 +11,6 @@
 
 int main(int argc, char **argv) {
     unsigned char *img_data = NULL;
-    float *input_float = NULL;
-    float *output_float = NULL;
     unsigned char *result_bytes = NULL;
     int status = 1;
 
@@ -63,18 +61,6 @@ int main(int argc, char **argv) {
     printf("Image loaded: %d x %d, RGB\n", width, height);
 
     int num_values = width * height * 3;
-    input_float = (float *)malloc(num_values * sizeof(float));
-    output_float = (float *)malloc(num_values * sizeof(float));
-    if (!input_float || !output_float) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        goto cleanup;
-    }
-
-    for (int i = 0; i < num_values; ++i) {
-        input_float[i] = img_data[i];
-    }
-    stbi_image_free(img_data);
-    img_data = NULL;
 
     /* Выбор ядра */
     const int is_sobelx = strcmp(kernel_type, "sobelx") == 0;
@@ -88,17 +74,19 @@ int main(int argc, char **argv) {
         kernel = box_blur_3x3;
     }
 
-    /* Свёртка */
-    convolve_rgb(input_float, width, height, kernel, kernel_size, output_float,
-                 border_mode);
-
-    /* Конвертация обратно в 8 бит */
+    /* Свёртка: на входе и выходе 8-битное изображение */
     result_bytes = (unsigned char *)malloc(num_values);
     if (!result_bytes) {
         fprintf(stderr, "Memory allocation failed.\n");
         goto cleanup;
     }
-    convert_to_bytes(output_float, num_values, is_sobelx, result_bytes);
+    if (convolve_rgb(img_data, width, height, kernel, kernel_size, is_sobelx,
+                     result_bytes, border_mode) != 0) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        goto cleanup;
+    }
+    stbi_image_free(img_data);
+    img_data = NULL;
 
     /* Сохранение изображения в формате PNG */
     int write_ok =
@@ -113,8 +101,6 @@ int main(int argc, char **argv) {
 
 cleanup:
     stbi_image_free(img_data);
-    free(input_float);
-    free(output_float);
     free(result_bytes);
     return status;
 }

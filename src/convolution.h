@@ -12,9 +12,9 @@ extern const float box_blur_3x3[9];
 extern const float identity_3x3[9];
 extern const float sobel_x_3x3[9];
 
-void convolve_rgb(const float *input_image, int width, int height,
-                  const float *kernel, int kernel_size, float *output_image,
-                  border_mode_t border_mode);
+int convolve_rgb(const unsigned char *input_image, int width, int height,
+                 const float *kernel, int kernel_size, int take_absolute_value,
+                 unsigned char *output_image, border_mode_t border_mode);
 
 void convert_to_bytes(const float *values, int count,
                       int take_absolute_value, unsigned char *output);
