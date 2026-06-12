@@ -188,9 +188,10 @@ def main():
                  capsize=4, label="Моя реализация")
     plt.errorbar(pixel_counts, opencv_mean_times, yerr=opencv_errors,
                  marker="o", capsize=4, label="OpenCV")
-    plt.xlabel("Количество пикселей")
+    plt.xlabel("Размер изображения")
     plt.ylabel("Время, мс")
     plt.yscale("log")
+    plt.xticks(pixel_counts, size_labels)
     plt.title("Зависимость времени свёртки от размера изображения")
     plt.legend()
     plt.savefig("speedup.png")
