@@ -8,6 +8,9 @@ typedef enum {
     BORDER_CONSTANT
 } border_mode_t;
 
+/* Ядра определены один раз в convolution.c, а здесь только extern-объявления.
+Это стандартный способ для C, при котором массивы не дублируются в памяти,
+а существуют в одном экземпляре */
 extern const float box_blur_3x3[9];
 extern const float identity_3x3[9];
 extern const float sobel_x_3x3[9];
