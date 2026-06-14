@@ -18,10 +18,16 @@ add_executable(opencv_reference tests/opencv_reference.cpp)
 
 target_link_libraries(opencv_reference ${OpenCV_LIBS})
 
-add_executable(convolution src/convolution.c)
+add_executable(convolution src/main.c src/convolution.c)
 
 target_link_libraries(convolution m)
 
 add_executable(test_compare tests/test.c)
 
 target_link_libraries(test_compare m)
+
+add_executable(benchmark_opencv experiments/benchmark_opencv.cpp)
+
+target_link_libraries(benchmark_opencv ${OpenCV_LIBS})
+
+add_executable(benchmark experiments/benchmark.c src/convolution.c)
